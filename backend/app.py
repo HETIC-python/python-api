@@ -1,6 +1,5 @@
 import os
-import json
-from flask import Flask, render_template, request, url_for, redirect, jsonify
+from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from lib.auth import check_password, encrypt_password
 from lib.jwt_mod import encode_jwt, decode_jwt

@@ -2,7 +2,8 @@ import os
 import json
 from flask import Flask, render_template, request, url_for, redirect, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from lib.auth import encrypt_password
+from lib.auth import check_password, encrypt_password
+from lib.jwt_mod import encode_jwt, decode_jwt
 
 from sqlalchemy.sql import func
 # from jwt import JWT, jwk_from_dict, jwk_from_pem, jws
@@ -51,13 +52,60 @@ def signup():
         'firstname': user.firstname,
         'lastname': user.lastname,
         'email': user.email,
-        'created_at': user.created_at,
-        'bio': user.bio
+        'created_at': user.created_at
     }
     return jsonify({'message': 'User created successfully', "data": saved_user})
 
+@app.route('/signin', methods=['POST'])
+def signin():
+      data = request.get_json()
+      user = User.query.filter_by(email= data["email"]).first()
+      if(not user):
+        return jsonify({'message': 'An error occurred', 'error': 'invalid credentials'})
+      if(check_password(data['password'], user.password)):
+        return jsonify({'token': encode_jwt({'id': user.id, 'email': user.email})})    
+      else:
+        return jsonify({'message': 'An error occurred', 'error': 'invalid credentials'})
 
-@app.route('/')
+@app.route('/users/<user_id>')
+def get_user(user_id):
+    #print(request.headers['token'])
+    try:
+       decoded_token = decode_jwt(request.headers['token'])     
+    except Exception as e:
+       return jsonify({'message': 'An error occurred', 'error': 'invalid token'}) 
+    user = User.query.filter_by(id = user_id).first()
+    if(not user):
+        return jsonify({'message': 'not found', 'error': 'user not found'})
+    if(decoded_token['id'] != user.id):
+        return jsonify({'message': 'not authorized', 'error': 'you don\'t have the necessary permissions'}) 
+    user_data = {
+                        'id': user.id,
+                        'firstname': user.firstname,
+                        'lastname': user.lastname,
+                        'email': user.email,
+                        'created_at': user.created_at
+                }
+    return jsonify({'data': user_data})
+
+@app.route('/users/<user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    try:
+       decoded_token = decode_jwt(request.headers['token'])     
+    except Exception as e:
+       return jsonify({'message': 'An error occurred', 'error': 'invalid token'}) 
+    user = User.query.filter_by(id = user_id).first()
+    if not user:
+        return jsonify({'message': 'not found', 'error': 'user not found'})
+    if(decoded_token['id'] != user.id):
+        return jsonify({'message': 'not authorized', 'error': 'you don\'t have the necessary permissions'})
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({'succes': "true",
+                    'data': []
+                    })
+
+@app.route('/users')
 def index():
         users = User.query.all()
         users_json = []
@@ -67,28 +115,8 @@ def index():
                         'firstname': user.firstname,
                         'lastname': user.lastname,
                         'email': user.email,
-                        'age': user.age,
-                        'created_at': user.created_at,
-                        'bio': user.bio
+                        'created_at': user.created_at
                 }
                 users_json.append(user_data)
 
-        return jsonify({'users': users_json})
-
-@app.route('/')
-def post():
-        users = User.query.all()
-        users_json = []
-        for user in users:
-                user_data = {
-                        'id': user.id,
-                        'firstname': user.firstname,
-                        'lastname': user.lastname,
-                        'email': user.email,
-                        'age': user.age,
-                        'created_at': user.created_at,
-                        'bio': user.bio
-                }
-                users_json.append(user_data)
-
-        return jsonify({'users': users_json})
+        return jsonify({'data': users_json})

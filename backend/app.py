@@ -74,6 +74,50 @@ def signup():
     )
 
 
+@app.route("/users/<user_id>", methods=["PUT"])
+def update(user_id):
+    try:
+        decoded_token = decode_jwt(request.headers["token"])
+    except Exception as e:
+        return jsonify({"message": "An error occurred", "error": "invalid token"})
+
+    user = User.query.filter_by(id=user_id).first()
+    if not user:
+        return jsonify({"message": "An error occurred", "error": "user not found"})
+
+    if decoded_token["id"] != user.id:
+        return jsonify(
+            {
+                "message": "not authorized",
+                "error": "you don't have the necessary permissions",
+            }
+        )
+    data = request.get_json()
+    if data.get("firstname"):
+        user.firstname = clean(data["firstname"])
+    if data.get("firstname"):
+        user.lastname = clean(data["firstname"])
+    try:
+        db.session.commit()
+    except Exception as e:
+        return jsonify({"message": "An error occurred", "error": str(e)})
+
+    updated_user = {
+        "id": user.id,
+        "firstname": user.firstname,
+        "lastname": user.lastname,
+        "email": user.email,
+        "created_at": user.created_at,
+    }
+    return jsonify(
+        {
+            "message": "User updated successfully",
+            "data": updated_user,
+            "token": encode_jwt({"id": user.id, "email": user.email}),
+        }
+    )
+
+
 @app.route("/signin", methods=["POST"])
 def signin():
     data = request.get_json()
@@ -81,7 +125,12 @@ def signin():
     if not user:
         return jsonify({"message": "An error occurred", "error": "invalid credentials"})
     if check_password(data["password"], user.password):
-        return jsonify({"userId":user.id ,"token": encode_jwt({"id": user.id, "email": user.email})})
+        return jsonify(
+            {
+                "userId": user.id,
+                "token": encode_jwt({"id": user.id, "email": user.email}),
+            }
+        )
     else:
         return jsonify({"message": "An error occurred", "error": "invalid credentials"})
 
@@ -150,6 +199,7 @@ def index():
 
     return jsonify({"data": users_json})
 
+
 if __name__ == "__main__":
     db.create_all()
-    app.run(host='localhost', port=5000)
+    app.run(host="localhost", port=5000)

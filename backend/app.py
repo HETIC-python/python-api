@@ -24,7 +24,7 @@ db = SQLAlchemy(app)
 
 @app.route("/ping")
 def pong():
-    return jsonify({"data": "pong"})
+    return jsonify({"data": "pong"}), 404
 
 
 class User(db.Model):
@@ -56,7 +56,7 @@ def signup():
         db.session.add(user)
         db.session.commit()
     except Exception as e:
-        return jsonify({"message": "An error occurred", "error": str(e)})
+        return jsonify({"message": "An error occurred", "error": str(e)}), 403
 
     saved_user = {
         "id": user.id,
@@ -96,7 +96,7 @@ def update(user_id):
     if data.get("firstname"):
         user.firstname = clean(data["firstname"])
     if data.get("firstname"):
-        user.lastname = clean(data["firstname"])
+        user.lastname = clean(data["lastname"])
     try:
         db.session.commit()
     except Exception as e:
@@ -113,7 +113,7 @@ def update(user_id):
         {
             "message": "User updated successfully",
             "data": updated_user,
-            "token": encode_jwt({"id": user.id, "email": user.email}),
+            "success" : True
         }
     )
 
@@ -123,7 +123,7 @@ def signin():
     data = request.get_json()
     user = User.query.filter_by(email=data["email"]).first()
     if not user:
-        return jsonify({"message": "An error occurred", "error": "invalid credentials"})
+        return jsonify({"message": "An error occurred", "error": "invalid credentials"}), 404
     if check_password(data["password"], user.password):
         return jsonify(
             {
@@ -132,7 +132,7 @@ def signin():
             }
         )
     else:
-        return jsonify({"message": "An error occurred", "error": "invalid credentials"})
+        return jsonify({"message": "An error occurred", "error": "invalid credentials"}), 304
 
 
 @app.route("/users/<user_id>")
@@ -141,17 +141,17 @@ def get_user(user_id):
     try:
         decoded_token = decode_jwt(request.headers["token"])
     except Exception as e:
-        return jsonify({"message": "An error occurred", "error": "invalid token"})
+        return jsonify({"message": "An error occurred", "error": "invalid token"}), 304
     user = User.query.filter_by(id=user_id).first()
     if not user:
-        return jsonify({"message": "not found", "error": "user not found"})
+        return jsonify({"message": "not found", "error": "user not found"}), 404
     if decoded_token["id"] != user.id:
         return jsonify(
             {
                 "message": "not authorized",
                 "error": "you don't have the necessary permissions",
             }
-        )
+        ), 403
     user_data = {
         "id": user.id,
         "firstname": user.firstname,
@@ -167,20 +167,20 @@ def delete_user(user_id):
     try:
         decoded_token = decode_jwt(request.headers["token"])
     except Exception as e:
-        return jsonify({"message": "An error occurred", "error": "invalid token"})
+        return jsonify({"message": "An error occurred", "error": "invalid token"}), 403
     user = User.query.filter_by(id=user_id).first()
     if not user:
-        return jsonify({"message": "not found", "error": "user not found"})
+        return jsonify({"message": "not found", "error": "user not found"}), 404
     if decoded_token["id"] != user.id:
         return jsonify(
             {
                 "message": "not authorized",
                 "error": "you don't have the necessary permissions",
             }
-        )
+        ), 403
     db.session.delete(user)
     db.session.commit()
-    return jsonify({"succes": "true", "data": []})
+    return jsonify({"success": True, "data": []})
 
 
 @app.route("/users")

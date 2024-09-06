@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from lib.auth import check_password, encrypt_password
 from lib.jwt_mod import encode_jwt, decode_jwt
+from bleach import clean
 
 from sqlalchemy.sql import func
 
@@ -17,6 +18,11 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 db = SQLAlchemy(app)
+
+
+@app.route("/ping")
+def pong():
+    return jsonify({"data": "pong"})
 
 
 class User(db.Model):
@@ -39,9 +45,9 @@ def signup():
     data = request.get_json()
     print(data)
     user = User(
-        firstname=data["firstname"],
-        lastname=data["lastname"],
-        email=data["email"],
+        firstname=clean(data["firstname"]),
+        lastname=clean(data["lastname"]),
+        email=clean(data["email"]),
         password=encrypt_password(data["password"]),
     )
     try:
@@ -57,7 +63,13 @@ def signup():
         "email": user.email,
         "created_at": user.created_at,
     }
-    return jsonify({"message": "User created successfully", "data": saved_user})
+    return jsonify(
+        {
+            "message": "User created successfully",
+            "data": saved_user,
+            "token": encode_jwt({"id": user.id, "email": user.email}),
+        }
+    )
 
 
 @app.route("/signin", methods=["POST"])

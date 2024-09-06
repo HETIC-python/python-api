@@ -1,7 +1,9 @@
 import jwt
+import os
+SECRET = os.environ.get('JWT_SECRET')
 
-def encode_jwt(payload, secret="secret"):
-    return jwt.encode(payload, secret, algorithm='HS256')
+def encode_jwt(payload):
+    return jwt.encode(payload, SECRET, algorithm='HS256')
 
-def decode_jwt(token, secret="secret"):
-    return jwt.decode(token, secret, algorithms=['HS256'])
+def decode_jwt(token):
+    return jwt.decode(token, SECRET, algorithms=['HS256'])

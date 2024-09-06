@@ -1,13 +1,15 @@
 # IMPORTANT
 
     - lire "./backend/readme.md"
-    
-## LAUNCH FRONT:
+
+## LAUNCH FRONT
+
     - `cd frontend`
     - `npm install`
     - `npm run dev`
 
-## LAUNCH BACK:
+## LAUNCH BACK
+
     - lire `./backend/readme.md`
     - `cd frontend`
     - `npm install`
@@ -16,7 +18,6 @@
 ## Etape 2
 
 Installer les librairies disponibles dans le fichier requirement.txt avec : pip3 install -r requirements.txt (En étant à la source du projet).
-
 
 ## GROUPE
 

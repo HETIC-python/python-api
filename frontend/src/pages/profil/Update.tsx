@@ -1,31 +1,63 @@
-import { Link,useParams } from "react-router-dom";
+import { Link,useNavigate,useParams } from "react-router-dom";
 import Layout from "../../components/Layout";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {API_URL} from "./../../utils/api"
 
 export default function Update () {
     let { userId } = useParams();
     userId= userId==undefined? "" : userId
+    const token = window.localStorage.getItem("token")
 
+    const navigate =  useNavigate()
     const [firstName,setFirstName] =  useState('')
     const [lastName,setLastName] =  useState('')
-
-
-    function onSubmit(e:any) {
-        e.preventDefault();
+    const [error,setError] =  useState("")
+    useEffect(()=>{
         fetch(
-            "http://localhost:3000/update",
+            `${API_URL}/users/${userId}`,
+            {
+              method: "GET",
+              headers: {
+                "Content-type": "application/json",
+                token: token|| ""
+              },
+            }
+          ).then((res)=>{
+            const result:any = res.json()
+            return result
+          }).then((result:any)=>{
+
+            setFirstName(result?.data?.firstname)
+            setLastName(result?.data?.lastname)
+          });
+    },[token])
+
+    async function onSubmit(e:any) {
+        e.preventDefault();
+        if (firstName==='' || lastName==="") {
+            setError("Empty field detected")
+            return
+        }
+        const resp = await fetch(
+            `${API_URL}/users/${userId}`,
             {
               method: "PUT",
               headers: {
                 "Content-type": "application/json",
+                token: token|| ""
               },
               body: JSON.stringify({
-                firstName: firstName,
-                lastName:lastName
+                firstname: firstName,
+                lastname:lastName
             }),
             }
           );
+
+          const data =  await resp.json()
+
+          if (data?.success) {
+            navigate(`/profil/${data?.data?.id}`)
+          }
 
     }
 
@@ -44,12 +76,13 @@ export default function Update () {
         <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
-          Créer un compte
+          Modifier les informations de compte
         </h2>
       </div>
 
       <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
         <form onSubmit={onSubmit} className="space-y-6">
+            {error && <p className="text-red-500">{error}</p>}
         <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
         <div className="sm:col-span-3">
         <div className="flex items-center justify-between">
@@ -95,15 +128,10 @@ export default function Update () {
               type="submit"
               className="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              S'inscrire
+                Modifier            
             </button>
           </div>
         </form>
-
-        <p className="mt-10 text-center text-sm text-gray-500">
-          Tu as un compte?{' '}
-        <Link to="/login" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">Login</Link>
-        </p>
       </div>
     </div>
     </Layout>

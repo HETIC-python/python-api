@@ -5,7 +5,7 @@ import Login from './pages/Login';
 import Index from './pages/profil';
 import Update from './pages/profil/Update';
 import Delete from './pages/profil/Delete';
-import Signin from './pages/Signin';
+import Signin from './pages/Signup';
 import Logout from './pages/Logout';
 
 

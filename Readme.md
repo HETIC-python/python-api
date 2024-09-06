@@ -26,3 +26,4 @@ Installer les librairies disponibles dans le fichier requirement.txt avec : pip3
 - Paul Charbel
 - Hugo CIEPLUCHA
 - MALCOLM CHARLERY
+- Ismael Dubuc

@@ -4,6 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from lib.auth import check_password, encrypt_password
 from lib.jwt_mod import encode_jwt, decode_jwt
 from bleach import clean
+from flask_cors import CORS
 
 from sqlalchemy.sql import func
 
@@ -12,6 +13,7 @@ from sqlalchemy.sql import func
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
+CORS(app)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + os.path.join(
     basedir, "database.db"
 )

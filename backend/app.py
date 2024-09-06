@@ -81,7 +81,7 @@ def signin():
     if not user:
         return jsonify({"message": "An error occurred", "error": "invalid credentials"})
     if check_password(data["password"], user.password):
-        return jsonify({"token": encode_jwt({"id": user.id, "email": user.email})})
+        return jsonify({"userId":user.id ,"token": encode_jwt({"id": user.id, "email": user.email})})
     else:
         return jsonify({"message": "An error occurred", "error": "invalid credentials"})
 
@@ -152,4 +152,4 @@ def index():
 
 if __name__ == "__main__":
     db.create_all()
-    app.run(host='localhost', port=9874)
+    app.run(host='localhost', port=5000)
